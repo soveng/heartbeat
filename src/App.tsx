@@ -71,7 +71,7 @@ export function App() {
       <div className="p-6 text-red-400">
         <p>Failed to load events: {error}</p>
         <p className="text-zinc-500 text-sm mt-2">
-          Run <code className="text-zinc-300">npm run fetch</code> first to populate{' '}
+          Run <code className="text-zinc-300">bun run fetch</code> first to populate{' '}
           <code className="text-zinc-300">public/data/events.json</code>.
         </p>
       </div>

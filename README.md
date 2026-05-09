@@ -14,13 +14,13 @@ and nostr-native hosts like [gitworkshop.dev](https://gitworkshop.dev/).
 
 ## Develop
 
-Requires Node 22+.
+Requires Bun 1.3+.
 
 ```bash
-npm install
+bun install
 export GITHUB_TOKEN=ghp_yourtoken   # any PAT; no scopes needed for public repos
-npm run fetch                       # writes public/data/events.json
-npm run dev
+bun run fetch                       # writes public/data/events.json
+bun run dev
 ```
 
 ## Configure
@@ -40,6 +40,6 @@ Knobs (time window, page sizes) live at the top of
 ## Deploy
 
 Built for Vercel. Set `GITHUB_TOKEN` as an env var; `vercel-build` runs
-`npm run fetch && npm run build`. For periodic refreshes, save a Vercel
+`bun run fetch && bun run build`. For periodic refreshes, save a Vercel
 Deploy Hook URL as the `VERCEL_DEPLOY_HOOK_URL` repo secret and the included
 [`refresh.yml`](.github/workflows/refresh.yml) workflow pings it every 6 hours.
