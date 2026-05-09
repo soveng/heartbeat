@@ -29,6 +29,7 @@ export const DatasetSchema = z.object({
   generatedAt: z.string(),
   windowDays: z.number(),
   repos: z.array(z.string()),
+  groups: z.record(z.string(), z.array(z.string())).default({}),
   funds: z.record(z.string(), z.array(z.string())).default({}),
   events: z.array(EventSchema),
 });
