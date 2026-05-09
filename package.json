@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "vercel-build": "bun run fetch && bun run build",
     "preview": "vite preview",
+    "import:repos": "bun scripts/importRepos.ts",
     "fetch": "bun scripts/fetch.ts",
     "test": "bun test",
     "typecheck": "tsc -b --noEmit",
