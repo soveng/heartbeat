@@ -1,4 +1,4 @@
-name: Refresh Vercel Deploy
+name: Refresh Heartbeat Deploy
 
 on:
   schedule:

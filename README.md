@@ -1,16 +1,13 @@
 # heartbeat
 
-Static activity dashboard for a set of GitHub repos. Renders commits, PRs,
-issues, and releases as a `git log --oneline`-style timeline.
+Static activity dashboard for projects explored at Sovereign Engineering cohorts.
+It renders commits, PRs, issues, and releases as a compact `git log --oneline`
+style timeline.
 
-Live at [heartbeat.opensats.org](https://heartbeat.opensats.org/)
+Target site: [heartbeat.sovereignengineering.io](https://heartbeat.sovereignengineering.io/)
 
-A GitHub Action fetches data via the GitHub GraphQL API at build time and
-writes `public/data/events.json`. The browser never talks to GitHub directly,
-so visitors don't burn any rate-limit budget.
-
-Today only GitHub is wired up. The plan is to also pull from Gitea, GitLab,
-and nostr-native hosts like [gitworkshop.dev](https://gitworkshop.dev/).
+Data is fetched at build time. The browser only reads `public/data/events.json`,
+so visitors never call GitHub directly and never spend API rate limit.
 
 ## Develop
 
@@ -18,28 +15,76 @@ Requires Bun 1.3+.
 
 ```bash
 bun install
-export GITHUB_TOKEN=ghp_yourtoken   # any PAT; no scopes needed for public repos
+export GITHUB_TOKEN=ghp_yourtoken   # public_repo scope is enough for public repos
 bun run fetch                       # writes public/data/events.json
 bun run dev
 ```
 
-## Configure
+Useful checks:
 
-Each `repos*.yml` file at the project root lists tracked repos; all matching
-files are merged and deduplicated.
-
-```yaml
-repos:
-  - owner/repo-1
-  - owner/repo-2
+```bash
+bun test
+bun run typecheck
+bun run lint
+bun run build
 ```
 
-Knobs (time window, page sizes) live at the top of
+## Configure
+
+Heartbeat derives its repo set from the Sovereign Engineering website project
+catalog.
+
+Default sources:
+
+- local: `../website/src/data/showcaseProjects.json`
+- CI fallback: `https://raw.githubusercontent.com/soveng/website/main/src/data/showcaseProjects.json`
+
+Rules:
+
+- GitHub repo URLs become `owner/repo`.
+- GitHub URLs with deeper paths, such as `/pull/123` or `/tree/main`, still map
+  to the base repo.
+- GitHub owner/org URLs, such as `github.com/orgs/Routstr`, expand to all public
+  non-archived repos for that owner.
+- Public `github.com/soveng` repos are always added to the `soveng` group.
+- Non-GitHub and site-only project links are reported and skipped.
+
+Override source:
+
+```bash
+SOVENG_PROJECTS_JSON=/path/to/showcaseProjects.json bun run import:repos
+SOVENG_PROJECTS_JSON=https://example.com/showcaseProjects.json bun run fetch
+```
+
+Knobs for the activity window and per-repo page sizes live at the top of
 [`scripts/fetch.ts`](scripts/fetch.ts).
 
 ## Deploy
 
-Built for Vercel. Set `GITHUB_TOKEN` as an env var; `vercel-build` runs
-`bun run fetch && bun run build`. For periodic refreshes, save a Vercel
-Deploy Hook URL as the `VERCEL_DEPLOY_HOOK_URL` repo secret and the included
-[`refresh.yml`](.github/workflows/refresh.yml) workflow pings it every 6 hours.
+Built for Vercel with Bun.
+
+Project settings:
+
+- Install command: `bun install --frozen-lockfile`
+- Build command: `bun run vercel-build`
+- Output directory: `dist`
+
+Required env:
+
+- `GITHUB_TOKEN`: GitHub token used for owner expansion and GraphQL activity fetch
+
+Optional env:
+
+- `SOVENG_PROJECTS_JSON`: explicit project catalog path or URL
+- `VERCEL_DEPLOY_HOOK_URL`: GitHub Actions secret used by scheduled refresh
+
+Domain:
+
+- Add `heartbeat.sovereignengineering.io` to the Vercel project.
+- Add the DNS record requested by Vercel.
+- Verify:
+
+```bash
+curl -I https://heartbeat.sovereignengineering.io/
+curl -fsS https://heartbeat.sovereignengineering.io/data/events.json
+```
