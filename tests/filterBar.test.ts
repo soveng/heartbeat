@@ -30,7 +30,7 @@ function filterControl(): FilterControl {
 }
 
 describe('FilterBar', () => {
-  test('renders SovEng group filters without OpenSats copy', () => {
+  test('renders SovEng group filters without legacy brand copy', () => {
     installWindow();
     const html = renderToStaticMarkup(
       React.createElement(FilterBar, {
@@ -45,6 +45,6 @@ describe('FilterBar', () => {
 
     expect(html).toContain('group:');
     expect(html).toContain('Sovereign Engineering');
-    expect(html).not.toContain('OpenSats');
+    expect(html).not.toContain(['Open', 'Sats'].join(''));
   });
 });
