@@ -1,8 +1,7 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { EVENT_TYPES, type EventType } from '../types';
 import { EVENT_TYPE_META } from '../eventTypes';
 import type { FilterControl } from '../lib/useUrlSet';
-import { useUrlString } from '../lib/useUrlString';
 import { RepoLabel } from './RepoLabel';
 
 const CHIP_BASE = 'px-2 py-1 sm:py-0.5 text-xs rounded border transition';
@@ -23,6 +22,8 @@ type Props = {
   repoFilter: FilterControl;
   typeFilter: FilterControl;
   actorFilter: FilterControl;
+  repoQuery: string;
+  setRepoQuery: (next: string) => void;
 };
 
 const clearIfActive = (f: FilterControl) => (f.selected != null ? f.clear : undefined);
@@ -84,9 +85,10 @@ export function FilterBar({
   repoFilter,
   typeFilter,
   actorFilter,
+  repoQuery,
+  setRepoQuery,
 }: Props) {
   const selectedActors = actorFilter.selected;
-  const [repoQuery, setRepoQuery] = useUrlString('q');
   const [reposExpanded, setReposExpanded] = useState(false);
   // The deferred query lets the input update at urgent priority while
   // the (heavier) filtered chip list and downstream effects re-render
@@ -110,26 +112,6 @@ export function FilterBar({
   }, [repos, groups, groupFilter.selected, deferredQuery]);
 
   const showRepoChips = reposExpanded || repoQuery.length > 0;
-
-  // Typing in the filter auto-selects matching repos; clearing the
-  // input drops the param so the timeline returns to all repos. We
-  // ignore the empty->empty case so URL-bound selections survive
-  // first render. Debounced so URL writes (which serialize the full
-  // repo set into history.replaceState) coalesce while typing.
-  const { set: setRepoSelection } = repoFilter;
-  const prevQueryRef = useRef(deferredQuery);
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      const prev = prevQueryRef.current;
-      prevQueryRef.current = deferredQuery;
-      if (deferredQuery.length === 0) {
-        if (prev.length > 0) setRepoSelection(null);
-        return;
-      }
-      setRepoSelection(new Set(filteredRepos));
-    }, 150);
-    return () => clearTimeout(handle);
-  }, [deferredQuery, filteredRepos, setRepoSelection]);
 
   const renderRepoChips = (list: string[]) => {
     if (list.length === 0) {

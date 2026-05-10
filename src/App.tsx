@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { loadEvents } from './lib/loadEvents';
 import { useUrlSet } from './lib/useUrlSet';
+import { useUrlString } from './lib/useUrlString';
+import { filterEvents } from './lib/filterEvents';
 import { Timeline } from './components/Timeline';
 import { FilterBar } from './components/FilterBar';
 import type { Dataset } from './types';
@@ -13,6 +15,7 @@ export function App() {
   const repoFilter = useUrlSet('repos');
   const typeFilter = useUrlSet('types');
   const actorFilter = useUrlSet('devs');
+  const [repoQuery, setRepoQuery] = useUrlString('q');
 
   useEffect(() => {
     loadEvents()
@@ -45,15 +48,21 @@ export function App() {
 
   const filtered = useMemo(() => {
     if (!data) return [];
-    const inSet = (s: Set<string> | null, v: string) => !s || s.size === 0 || s.has(v);
-    return data.events.filter(
-      (e) =>
-        (!groupReposUnion || groupReposUnion.has(e.repo)) &&
-        inSet(repoFilter.selected, e.repo) &&
-        inSet(typeFilter.selected, e.type) &&
-        inSet(actorFilter.selected, e.actor),
-    );
-  }, [data, groupReposUnion, repoFilter.selected, typeFilter.selected, actorFilter.selected]);
+    return filterEvents(data.events, {
+      groupRepos: groupReposUnion,
+      repoSelection: repoFilter.selected,
+      typeSelection: typeFilter.selected,
+      actorSelection: actorFilter.selected,
+      repoQuery,
+    });
+  }, [
+    data,
+    groupReposUnion,
+    repoFilter.selected,
+    typeFilter.selected,
+    actorFilter.selected,
+    repoQuery,
+  ]);
 
   const { set: setRepoSelection } = repoFilter;
   const { set: setActorSelection } = actorFilter;
@@ -114,6 +123,8 @@ export function App() {
           repoFilter={repoFilter}
           typeFilter={typeFilter}
           actorFilter={actorFilter}
+          repoQuery={repoQuery}
+          setRepoQuery={setRepoQuery}
         />
       </div>
       <Timeline events={filtered} onSelectRepo={onSelectRepo} onSelectActor={onSelectActor} />

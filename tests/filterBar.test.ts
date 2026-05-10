@@ -40,6 +40,8 @@ describe('FilterBar', () => {
         repoFilter: filterControl(),
         typeFilter: filterControl(),
         actorFilter: filterControl(),
+        repoQuery: '',
+        setRepoQuery() {},
       }),
     );
 
