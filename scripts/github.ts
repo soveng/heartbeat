@@ -1,12 +1,6 @@
 import { z } from 'zod';
 import { graphql } from '@octokit/graphql';
-import type {
-  CommitNode,
-  GitHubRepoActivity,
-  IssueNode,
-  PrNode,
-  ReleaseNode,
-} from './events';
+import type { CommitNode, GitHubRepoActivity, IssueNode, PrNode, ReleaseNode } from './events';
 
 const GithubRepoSchema = z.object({
   full_name: z.string(),

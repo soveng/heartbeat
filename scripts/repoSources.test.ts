@@ -37,7 +37,11 @@ describe('githubReferenceFromUrl', () => {
 
   test('skips non-GitHub, gist, and invalid URLs', () => {
     expect(githubReferenceFromUrl('https://sigit.io')).toMatchObject({ type: 'skip' });
-    expect(githubReferenceFromUrl('https://gist.github.com/BoltTouring/dde944661df330ec5119af8ef94159e1')).toMatchObject({
+    expect(
+      githubReferenceFromUrl(
+        'https://gist.github.com/BoltTouring/dde944661df330ec5119af8ef94159e1',
+      ),
+    ).toMatchObject({
       type: 'skip',
     });
     expect(githubReferenceFromUrl('not a url')).toMatchObject({ type: 'skip' });

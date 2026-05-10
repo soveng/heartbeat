@@ -185,7 +185,9 @@ export async function loadShowcaseProjects(source?: string): Promise<{
   };
 }
 
-export async function loadRepoConfig(options: LoadRepoConfigOptions = {}): Promise<RepoGroupConfig> {
+export async function loadRepoConfig(
+  options: LoadRepoConfigOptions = {},
+): Promise<RepoGroupConfig> {
   const loaded = await loadShowcaseProjects(options.projectsSource);
   return await buildRepoGroupsFromProjects(
     loaded.projects,
