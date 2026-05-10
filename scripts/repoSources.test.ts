@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  DEFAULT_PROJECTS_JSON_URL,
   buildRepoGroupsFromProjects,
   githubReferenceFromUrl,
+  loadShowcaseProjects,
   type GithubOwnerRepoLister,
   type ShowcaseProject,
 } from './repoSources';
@@ -86,5 +88,23 @@ describe('buildRepoGroupsFromProjects', () => {
     expect(config.skipped).toContainEqual(
       expect.objectContaining({ cohort: 'SEC-07', project: 'Site-only project' }),
     );
+  });
+});
+
+describe('loadShowcaseProjects', () => {
+  test('uses the GitHub website catalog by default', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: string | URL | Request) => {
+      expect(String(url)).toBe(DEFAULT_PROJECTS_JSON_URL);
+      return new Response(JSON.stringify([{ name: 'Remote project', cohort: 'SEC-01' }]));
+    }) as typeof fetch;
+
+    try {
+      const loaded = await loadShowcaseProjects();
+      expect(loaded.source).toBe(DEFAULT_PROJECTS_JSON_URL);
+      expect(loaded.projects).toEqual([{ name: 'Remote project', cohort: 'SEC-01' }]);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

@@ -1,12 +1,8 @@
-import { access, readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
 import { listPublicOwnerRepos } from './github';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_LOCAL_PROJECTS_PATH = resolve(ROOT, '../website/src/data/showcaseProjects.json');
-const DEFAULT_PROJECTS_JSON_URL =
+export const DEFAULT_PROJECTS_JSON_URL =
   'https://raw.githubusercontent.com/soveng/website/main/src/data/showcaseProjects.json';
 
 const LinkSchema = z.object({
@@ -168,21 +164,6 @@ export async function buildRepoGroupsFromProjects(
   };
 }
 
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function defaultProjectsSource(): Promise<string> {
-  return (await fileExists(DEFAULT_LOCAL_PROJECTS_PATH))
-    ? DEFAULT_LOCAL_PROJECTS_PATH
-    : DEFAULT_PROJECTS_JSON_URL;
-}
-
 async function readProjectsSource(source: string): Promise<string> {
   if (/^https?:\/\//i.test(source)) {
     const res = await fetch(source);
@@ -196,8 +177,7 @@ export async function loadShowcaseProjects(source?: string): Promise<{
   source: string;
   projects: ShowcaseProject[];
 }> {
-  const resolvedSource =
-    source ?? process.env.SOVENG_PROJECTS_JSON ?? (await defaultProjectsSource());
+  const resolvedSource = source ?? process.env.SOVENG_PROJECTS_JSON ?? DEFAULT_PROJECTS_JSON_URL;
   const raw = await readProjectsSource(resolvedSource);
   return {
     source: resolvedSource,

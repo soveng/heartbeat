@@ -34,10 +34,9 @@ bun run build
 Heartbeat derives its repo set from the Sovereign Engineering website project
 catalog.
 
-Default sources:
+Default source:
 
-- local: `../website/src/data/showcaseProjects.json`
-- CI fallback: `https://raw.githubusercontent.com/soveng/website/main/src/data/showcaseProjects.json`
+- `https://raw.githubusercontent.com/soveng/website/main/src/data/showcaseProjects.json`
 
 Rules:
 
@@ -49,7 +48,7 @@ Rules:
 - Public `github.com/soveng` repos are always added to the `soveng` group.
 - Non-GitHub and site-only project links are reported and skipped.
 
-Override source:
+Override source for local testing:
 
 ```bash
 SOVENG_PROJECTS_JSON=/path/to/showcaseProjects.json bun run import:repos
