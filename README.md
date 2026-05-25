@@ -77,13 +77,8 @@ Knobs for the activity window and per-repo page sizes live at the top of
 
 ## Deploy
 
-Built for Vercel with Bun.
-
-Project settings:
-
-- Install command: `bun install --frozen-lockfile`
-- Build command: `bun run vercel-build`
-- Output directory: `dist`
+Built with Bun. Deployment builds must run the GitHub fetcher before `vite build`
+because `public/data/events.json` is generated and intentionally ignored by git.
 
 Required env:
 
@@ -93,6 +88,32 @@ Optional env:
 
 - `SOVENG_PROJECTS_JSON`: explicit project catalog path or URL
 - `VERCEL_DEPLOY_HOOK_URL`: GitHub Actions secret used by scheduled refresh
+
+### Netlify
+
+`netlify.toml` declares the build settings:
+
+- Build command: `bun run fetch && bun run build`
+- Publish directory: `dist`
+- Bun version: `1.3.3`
+
+Set `GITHUB_TOKEN` in the Netlify site's environment variables before deploying.
+Without it, the fetch step should fail and no stale/empty deployment should publish.
+
+Verify after deploy:
+
+```bash
+curl -I https://heartbeat-soveng.netlify.app/
+curl -fsS https://heartbeat-soveng.netlify.app/data/events.json
+```
+
+### Vercel
+
+Project settings:
+
+- Install command: `bun install --frozen-lockfile`
+- Build command: `bun run vercel-build`
+- Output directory: `dist`
 
 Domain:
 
