@@ -1,12 +1,21 @@
+import { existsSync } from 'node:fs';
+
 import { describe, expect, test } from 'bun:test';
 
 describe('netlify.toml', () => {
-  test('runs the data fetch before building the static site', async () => {
+  test('runs the provider-neutral deploy build before publishing the static site', async () => {
     const config = await Bun.file('netlify.toml').text();
+    const pkg = await Bun.file('package.json').json();
 
-    expect(config).toContain('command = "bun run fetch && bun run build"');
+    expect(config).toContain('command = "bun run deploy-build"');
     expect(config).toContain('publish = "dist"');
     expect(config).toContain('BUN_VERSION = "1.3.3"');
+    expect(pkg.scripts['deploy-build']).toBe('bun run fetch && bun run build');
+    expect(pkg.scripts['vercel-build']).toBeUndefined();
+  });
+
+  test('does not keep active legacy-provider deployment config on the Netlify branch', () => {
+    expect(existsSync('vercel.json')).toBe(false);
   });
 
   test('declares security and cache headers for the Netlify deployment', async () => {

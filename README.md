@@ -77,51 +77,49 @@ Knobs for the activity window and per-repo page sizes live at the top of
 
 ## Deploy
 
+Netlify is the canonical deployment path for this fork.
+
 Built with Bun. Deployment builds must run the GitHub fetcher before `vite build`
 because `public/data/events.json` is generated and intentionally ignored by git.
+The browser only reads the generated file from the published `dist` output.
 
-Required env:
+Local env:
 
-- `GITHUB_TOKEN`: GitHub token used for owner expansion and GraphQL activity fetch
+- `GITHUB_TOKEN` or `GH_TOKEN`: GitHub token used locally by the fetcher for owner expansion and GraphQL activity fetches.
+- `SOVENG_PROJECTS_JSON`: optional explicit project catalog path or URL.
 
-Optional env:
+Netlify build env:
 
-- `SOVENG_PROJECTS_JSON`: explicit project catalog path or URL
-- `VERCEL_DEPLOY_HOOK_URL`: GitHub Actions secret used by scheduled refresh
+- `GITHUB_TOKEN`: read-only GitHub token used by `bun run fetch`.
+
+GitHub Actions repo secret:
+
+- `NETLIFY_BUILD_HOOK_URL`: Netlify build hook URL, never committed or logged.
 
 ### Netlify
 
 `netlify.toml` declares the build settings:
 
-- Build command: `bun run fetch && bun run build`
+- Build command: `bun run deploy-build`
 - Publish directory: `dist`
 - Bun version: `1.3.3`
 
-Set `GITHUB_TOKEN` in the Netlify site's environment variables before deploying.
-Without it, the fetch step should fail and no stale/empty deployment should publish.
+Setup checklist:
 
-Verify after deploy:
+1. Link repo `soveng/heartbeat` to the Netlify site.
+2. Set Netlify build env `GITHUB_TOKEN`.
+3. Create a Netlify build hook for `master`.
+4. Save the hook URL as GitHub repo secret `NETLIFY_BUILD_HOOK_URL`.
+5. Verify the Netlify subdomain first: `heartbeat-soveng.netlify.app`.
+6. Attach custom domain `heartbeat.sovereignengineering.io`.
+7. Point DNS to Netlify as requested by Netlify.
 
-```bash
-curl -I https://heartbeat-soveng.netlify.app/
-curl -fsS https://heartbeat-soveng.netlify.app/data/events.json
-```
-
-### Vercel
-
-Project settings:
-
-- Install command: `bun install --frozen-lockfile`
-- Build command: `bun run vercel-build`
-- Output directory: `dist`
-
-Domain:
-
-- Add `heartbeat.sovereignengineering.io` to the Vercel project.
-- Add the DNS record requested by Vercel.
-- Verify:
+Verification commands:
 
 ```bash
-curl -I https://heartbeat.sovereignengineering.io/
-curl -fsS https://heartbeat.sovereignengineering.io/data/events.json
+curl -fsSI https://heartbeat-soveng.netlify.app/
+curl -fsS https://heartbeat-soveng.netlify.app/data/events.json >/dev/null
+curl -fsSI https://heartbeat.sovereignengineering.io/
+curl -fsS https://heartbeat.sovereignengineering.io/data/events.json >/dev/null
+curl -fsS https://heartbeat.sovereignengineering.io/soveng-og-logo.jpg >/dev/null
 ```
