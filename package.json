@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy-build": "bun run fetch && bun run build",
     "vercel-build": "bun run fetch && bun run build",
     "preview": "vite preview",
     "import:repos": "bun scripts/importRepos.ts",

@@ -1,5 +1,5 @@
 [build]
-  command = "bun run fetch && bun run build"
+  command = "bun run deploy-build"
   publish = "dist"
 
 [build.environment]
