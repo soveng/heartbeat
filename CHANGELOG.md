@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added grouped filters for SEC cohorts and the public `soveng` GitHub org.
 - Switched the fork to Bun-only install, test, build, fetch, and deployment
   commands.
+- Made Netlify the canonical deployment provider and moved legacy
+  deployment-provider config out of the active branch.
+- Switched scheduled refreshes to a Netlify build hook.
 - Kept search URLs compact by deriving matches from `?q=` instead of serializing
   every query-matched repo into `?repos=`.
 
@@ -28,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Catalog coverage metadata for source, project count, skipped links, empty
   groups, and group counts.
 - Initial timeline row cap with a show-more control for large event feeds.
-- Vercel security and cache headers for the static deployment.
+- Netlify security and cache headers for the static deployment.
 
 ### Documentation
 
