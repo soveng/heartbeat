@@ -1,4 +1,6 @@
-name: Refresh Heartbeat Deploy
+name: Refresh Netlify Deploy
+
+permissions: {}
 
 on:
   schedule:
@@ -11,4 +13,4 @@ jobs:
     steps:
       - run: curl -fsS -X POST "$HOOK"
         env:
-          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
