@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "import:repos": "bun scripts/importRepos.ts",
     "fetch": "bun scripts/fetch.ts",
+    "hosted:smoke": "bun scripts/hostedSmoke.ts",
     "test": "bun test",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
