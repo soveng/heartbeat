@@ -1,16 +1,96 @@
-name: Refresh Netlify Deploy
+name: Refresh Appwrite Deploy
 
 permissions: {}
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '17 */6 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: appwrite-refresh
+  cancel-in-progress: false
+
 jobs:
-  ping:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - run: curl -fsS -X POST "$HOOK"
+      - name: Trigger Appwrite VCS deployment
+        run: |
+          set -euo pipefail
+
+          for name in APPWRITE_ENDPOINT APPWRITE_PROJECT_ID APPWRITE_SITE_ID APPWRITE_API_KEY; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::$name is required"
+              exit 1
+            fi
+          done
+
+          endpoint="${APPWRITE_ENDPOINT%/}"
+          response="$(mktemp)"
+          status="$(
+            curl -sS -o "$response" -w '%{http_code}' \
+              -X POST "$endpoint/sites/$APPWRITE_SITE_ID/deployments/vcs" \
+              -H "Content-Type: application/json" \
+              -H "X-Appwrite-Project: $APPWRITE_PROJECT_ID" \
+              -H "X-Appwrite-Key: $APPWRITE_API_KEY" \
+              --data '{"type":"branch","reference":"master","activate":true}'
+          )"
+
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "::error::Appwrite deployment request failed with HTTP $status"
+            jq -r '.message // "No Appwrite error message returned"' "$response" 2>/dev/null || true
+            exit 1
+          fi
+
+          deployment_id="$(jq -r '."$id" // empty' "$response")"
+          if [ -z "$deployment_id" ]; then
+            echo '::error::Appwrite deployment response did not include $id'
+            exit 1
+          fi
+
+          echo "Queued Appwrite deployment $deployment_id"
+
+          deadline=$((SECONDS + 1200))
+          while [ "$SECONDS" -lt "$deadline" ]; do
+            sleep 15
+            status="$(
+              curl -sS -o "$response" -w '%{http_code}' \
+                "$endpoint/sites/$APPWRITE_SITE_ID/deployments/$deployment_id" \
+                -H "X-Appwrite-Project: $APPWRITE_PROJECT_ID" \
+                -H "X-Appwrite-Key: $APPWRITE_API_KEY"
+            )"
+            if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+              echo "::error::Appwrite deployment status request failed with HTTP $status"
+              jq -r '.message // "No Appwrite error message returned"' "$response" 2>/dev/null || true
+              exit 1
+            fi
+
+            deployment_status="$(jq -r '.status // empty' "$response")"
+            echo "Deployment status: $deployment_status"
+
+            case "$deployment_status" in
+              ready)
+                echo "Appwrite deployment is ready"
+                exit 0
+                ;;
+              failed)
+                echo "::error::Appwrite deployment failed"
+                exit 1
+                ;;
+              waiting|processing|building)
+                ;;
+              *)
+                echo "::error::Unexpected Appwrite deployment status: $deployment_status"
+                exit 1
+                ;;
+            esac
+          done
+
+          echo "::error::Timed out waiting for Appwrite deployment $deployment_id"
+          exit 1
         env:
-          HOOK: ${{ secrets.NETLIFY_BUILD_HOOK_URL }}
+          APPWRITE_ENDPOINT: ${{ secrets.APPWRITE_ENDPOINT }}
+          APPWRITE_PROJECT_ID: ${{ secrets.APPWRITE_PROJECT_ID }}
+          APPWRITE_SITE_ID: ${{ secrets.APPWRITE_SITE_ID }}
+          APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
