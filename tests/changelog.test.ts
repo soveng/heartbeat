@@ -6,20 +6,21 @@ const currentForkSection = (changelog: string) =>
 const collapseWhitespace = (value: string) => value.replace(/\s+/g, ' ');
 
 describe('changelog', () => {
-  test('keeps the current fork section Netlify-canonical', async () => {
+  test('keeps the current fork section Appwrite-canonical', async () => {
     const changelog = await Bun.file('CHANGELOG.md').text();
     const currentFork = currentForkSection(changelog);
     const normalizedCurrentFork = collapseWhitespace(currentFork);
 
     expect(normalizedCurrentFork).toContain(
-      'Made Netlify the canonical deployment provider and moved legacy deployment-provider config out of the active branch.',
+      'Made Appwrite the canonical hosted deployment provider and moved legacy deployment-provider config out of the active branch.',
     );
     expect(normalizedCurrentFork).toContain(
-      'Switched scheduled refreshes to a Netlify build hook.',
+      'Switched scheduled refreshes to the Appwrite VCS deployment API.',
     );
     expect(normalizedCurrentFork).toContain(
-      'Netlify security and cache headers for the static deployment.',
+      'Hosted deployment smoke checks for the generated activity feed, OpenGraph image, and security/cache headers.',
     );
+    expect(currentFork).not.toMatch(/netlify/i);
     expect(currentFork).not.toMatch(/vercel/i);
   });
 });

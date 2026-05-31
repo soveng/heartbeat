@@ -77,7 +77,7 @@ Knobs for the activity window and per-repo page sizes live at the top of
 
 ## Deploy
 
-Netlify is the canonical deployment path for this fork.
+Appwrite is the canonical hosted deployment path for this fork.
 
 Built with Bun. Deployment builds must run the GitHub fetcher before `vite build`
 because `public/data/events.json` is generated and intentionally ignored by git.
@@ -87,39 +87,55 @@ Local env:
 
 - `GITHUB_TOKEN` or `GH_TOKEN`: GitHub token used locally by the fetcher for owner expansion and GraphQL activity fetches.
 - `SOVENG_PROJECTS_JSON`: optional explicit project catalog path or URL.
+- `HOSTED_BASE_URL`: optional base URL for `bun run hosted:smoke`.
 
-Netlify build env:
+Appwrite site env:
 
 - `GITHUB_TOKEN`: read-only GitHub token used by `bun run fetch`.
+- `SOVENG_PROJECTS_JSON`: optional explicit project catalog path or URL.
 
-GitHub Actions repo secret:
+GitHub Actions repo secrets:
 
-- `NETLIFY_BUILD_HOOK_URL`: Netlify build hook URL, never committed or logged.
+- `APPWRITE_ENDPOINT`: Appwrite endpoint including `/v1`, for example `https://<REGION>.cloud.appwrite.io/v1`.
+- `APPWRITE_PROJECT_ID`: Appwrite project id.
+- `APPWRITE_SITE_ID`: Appwrite site id.
+- `APPWRITE_API_KEY`: Appwrite API key scoped to create and read site deployments.
 
-### Netlify
+### Appwrite
 
-`netlify.toml` declares the build settings:
+Create an Appwrite Sites project linked to `soveng/heartbeat`:
 
-- Build command: `bun run deploy-build`
-- Publish directory: `dist`
-- Bun version: `1.3.3`
+- Production branch: `master`
+- Framework/rendering: static site
+- Install command:
 
-Setup checklist:
+  ```bash
+  curl -fsSL https://bun.com/install | bash -s "bun-v1.3.3" && export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun --version && bun install --frozen-lockfile
+  ```
 
-1. Link repo `soveng/heartbeat` to the Netlify site.
-2. Set Netlify build env `GITHUB_TOKEN`.
-3. Create a Netlify build hook for `master`.
-4. Save the hook URL as GitHub repo secret `NETLIFY_BUILD_HOOK_URL`.
-5. Verify the Netlify subdomain first: `heartbeat-soveng.netlify.app`.
-6. Attach custom domain `heartbeat.sovereignengineering.io`.
-7. Point DNS to Netlify as requested by Netlify.
+- Build command:
+
+  ```bash
+  export BUN_INSTALL="$HOME/.bun" && export PATH="$BUN_INSTALL/bin:$PATH" && bun run deploy-build
+  ```
+
+- Output directory: `dist`
+
+Scheduled refreshes are handled by `.github/workflows/refresh.yml`. The workflow
+uses the Appwrite VCS deployment API every 6 hours to rebuild `master` and
+activate the new deployment when it becomes ready.
 
 Verification commands:
 
 ```bash
-curl -fsSI https://heartbeat-soveng.netlify.app/
-curl -fsS https://heartbeat-soveng.netlify.app/data/events.json >/dev/null
-curl -fsSI https://heartbeat.sovereignengineering.io/
-curl -fsS https://heartbeat.sovereignengineering.io/data/events.json >/dev/null
-curl -fsS https://heartbeat.sovereignengineering.io/soveng-og-logo.jpg >/dev/null
+HOSTED_BASE_URL=https://<appwrite-generated-domain> bun run hosted:smoke
+HOSTED_BASE_URL=https://heartbeat.sovereignengineering.io bun run hosted:smoke
 ```
+
+Cutover checklist:
+
+1. Deploy and verify the Appwrite generated domain.
+2. Add custom domain `heartbeat.sovereignengineering.io` in Appwrite.
+3. Point DNS as requested by Appwrite.
+4. Run the custom-domain smoke check above.
+5. Keep the previous hosting provider available for 24 hours as rollback.
